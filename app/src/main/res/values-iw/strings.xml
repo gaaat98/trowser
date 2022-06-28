@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="app_name">"Trowser: דפדפן לטלויזיה"</string>
     <string name="error">"שגיאה"</string>
-
     <!-- Fuzzy -->
     <string name="ok">"OK"</string>
     <string name="loading">"טוען..."</string>
@@ -77,7 +76,7 @@
     <string name="downloads">"הורדות"</string>
     <string name="downloads_notifications_description">"התראות בנוגע לסטטוס הורדות"</string>
     <string name="main">"ראשי"</string>
-    <string name="version_and_updates"><![CDATA[גרסא ועדכונים]]></string>
+    <string name="version_and_updates">גרסא ועדכונים</string>
     <string name="version_s">"גרסא: %s"</string>
     <string name="update_channel">"ערוץ עדכונים:"</string>
     <string name="auto_check_for_updates">"בדוק אוטומטית לעדכונים:"</string>
@@ -116,11 +115,18 @@
         <item>לבן</item>
         <item>אפל</item>
     </array>
-  <string name="set_search_engine_as_homepage">הפוך מנוע חיפוש לדף הבית שלך</string>
-  <string name="toggle_keep_screen_on">השאר מסך דלוק</string>
-  <string name="incognito_mode">מצב גלישה בסתר</string>
+    <string name="set_search_engine_as_homepage">הפוך מנוע חיפוש לדף הבית שלך</string>
+    <string name="toggle_keep_screen_on">השאר מסך דלוק</string>
+    <string name="incognito_mode">מצב גלישה בסתר</string>
     <string name="incognito_mode_hint">עכשיו אתה יכול לגלוש באופן פרטי, ואנשים אחרים שמשתמשים במכשיר הזה לא יראו את הפעילות שלך. Trowser לא ישמור את היסטוריית הגלישה שלך, קובצי Cookie ונתוני אתר, מידע שהוזן בטפסים.  עם זאת, הורדות וסימניות יישמרו. ייתכן שהפעילות שלך עדיין תהיה גלויה לאתרים שבהם אתה מבקר, לארגון או לספק שירותי האינטרנט שלך.</string>
     <string name="don_t_show_again">אל תראה שוב</string>
     <string name="why_icon_changed">למה הסמל השתנה?</string>
-  <string name="clear_web_cache">נקה מטמון אינטרנט</string>
+    <string name="clear_web_cache">נקה מטמון אינטרנט</string>
+    <string-array name="tabs_options">
+        <item>הוספה חדשה</item>
+        <item>זרם סגור</item>
+        <item>סגור הכל</item>
+        <item>זוז שמאלה</item>
+        <item>זוז ימינה</item>
+    </string-array>
 </resources>

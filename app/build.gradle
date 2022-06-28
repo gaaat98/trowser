@@ -47,6 +47,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.20")
 
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.4.1")
+    implementation 'com.google.android.material:material:1.6.1'
 
     def roomVersion = "2.4.2"
     implementation("androidx.room:room-runtime:$roomVersion")
@@ -56,6 +57,8 @@ dependencies {
     implementation("com.github.truefedex:segmented-button:v1.0.0")
     implementation("com.github.truefedex:ad-block:v0.0.1-ci")
     implementation("de.halfbit:pinned-section-listview:1.0.0")
+
+    implementation 'com.github.zagum:SpeechRecognitionView:1.2.2'
 }
 
 kapt {

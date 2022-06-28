@@ -763,11 +763,19 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
     fun toggleMenu() {
         if (vb.rlActionBar.visibility == View.INVISIBLE) {
             showMenuOverlay()
-            Log.i(TAG, "SHOWING MENU OVERLAY")
         } else {
             hideMenuOverlay()
-            Log.i(TAG, "HIDING MENU OVERLAY")
         }
+    }
+
+    // actionbar will show also when moving to the top with a mouse
+    override fun dispatchGenericMotionEvent(event: MotionEvent?): Boolean {
+        if (vb.rlActionBar.visibility == View.INVISIBLE && event?.y == 0f){
+            showMenuOverlay()
+        }else if(vb.rlActionBar.visibility == View.VISIBLE && event?.y!! > (vb.vTabs.y+vb.vTabs.height)){
+            hideMenuOverlay()
+        }
+        return super.onGenericMotionEvent(event)
     }
 
     @SuppressLint("RestrictedApi")
@@ -792,7 +800,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
                 uiHandler.post { vb.flWebViewContainer.exitFingerMode() }
             }
             return true
-        } else if (shortcutMgr.canProcessKeyCode(keyCode)) {
+        } else if (!vb.vActionBar.isExtendedAddressBarMode() && shortcutMgr.canProcessKeyCode(keyCode)) {
             if (event.action == KeyEvent.ACTION_UP) {
                 uiHandler.post { shortcutMgr.process(keyCode, this) }
             }

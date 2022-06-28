@@ -42,7 +42,6 @@ class CursorLayout : FrameLayout {
     private val scrollHackCoords = PointF()
     private val scrollHackActiveRect = Rect()
     var fingerMode = false
-
     private lateinit var ma: MainActivity
 
     private val isCursorDissappear: Boolean
@@ -89,6 +88,7 @@ class CursorLayout : FrameLayout {
         callback?.onUserInteraction()
         return super.onInterceptTouchEvent(ev)
     }
+
 
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
         super.onSizeChanged(w, h, ow, oh)

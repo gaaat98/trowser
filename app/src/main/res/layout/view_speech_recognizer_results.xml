@@ -12,21 +12,20 @@
   <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="@dimen/voice_recognition_results_renderer_height"
+      android:layout_margin="10dp"
       android:gravity="center_vertical"
       android:orientation="horizontal"
       >
-    <ImageView
+    <com.github.zagum.speechrecognitionview.RecognitionProgressView
         android:id="@+id/ivMic"
-        android:layout_marginStart="5dp"
-        android:layout_width="42dp"
-        android:layout_height="42dp"
-        android:src="@drawable/ic_mic_none_grey_900_36dp"
-        />
+        android:layout_width="48dp"
+        android:layout_height="match_parent" />
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         tools:text="Test recognized text"
-        android:textSize="20sp"
+        android:textSize="24sp"
         android:textColor="@color/default_url_color"
         android:layout_marginStart="10dp"
         android:id="@+id/tvResults"

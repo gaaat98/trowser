@@ -32,4 +32,9 @@
     <color name="settings_tab_color_focused">#ade1f5</color>
     <color name="settings_tab_color_activated">#ade1f5</color>
     <color name="settings_tab_activated_underline_color">#009688</color>
+
+    <color name="GBlue">#4285F4</color>
+    <color name="GRed">#DB4437</color>
+    <color name="GYellow">#F4B400</color>
+    <color name="GGreen">#0F9D58</color>
 </resources>

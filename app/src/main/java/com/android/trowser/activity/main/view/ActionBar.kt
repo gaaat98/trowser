@@ -6,6 +6,7 @@ import android.transition.TransitionManager
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.LayoutInflater
+import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.View.OnKeyListener
 import android.view.animation.Animation
@@ -14,6 +15,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.children
 import com.android.trowser.R
 import com.android.trowser.Trowser
 import com.android.trowser.activity.downloads.ActiveDownloadsModel
@@ -53,11 +55,12 @@ class ActionBar @JvmOverloads constructor(
             handler.postDelayed(//workaround an android TV bug
                 {
                     vb.etUrl.selectAll()
-                }, 500)
+                }, 100)
         }
     }
 
-    private val etUrlKeyListener = OnKeyListener { view, i, keyEvent ->
+
+    private val etUrlKeyListener = OnKeyListener { _, _, keyEvent ->
         when (keyEvent.keyCode) {
             KeyEvent.KEYCODE_ENTER -> {
                 if (keyEvent.action == KeyEvent.ACTION_UP) {
@@ -75,6 +78,22 @@ class ActionBar @JvmOverloads constructor(
                 }
                 return@OnKeyListener true
             }
+            KeyEvent.KEYCODE_BACK -> {
+                if (keyEvent.action == KeyEvent.ACTION_UP && extendedAddressBarMode) {
+                    dismissExtendedAddressBarMode()
+                    vb.flUrl.requestFocus()
+                }
+                return@OnKeyListener true
+            }
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                // going back when cursor is at position zero, no text is selected and we press left again
+                if (keyEvent.action == KeyEvent.ACTION_DOWN && extendedAddressBarMode && vb.etUrl.selectionEnd == 0 && vb.etUrl.selectionEnd == vb.etUrl.selectionStart) {
+                    dismissExtendedAddressBarMode()
+                    catchFocus()
+                    return@OnKeyListener true
+                }
+            }
+
         }
         false
     }
@@ -90,6 +109,8 @@ class ActionBar @JvmOverloads constructor(
         vb.ibHistory.setOnClickListener { callback?.showHistory() }
         vb.ibIncognito.setOnClickListener { callback?.toggleIncognitoMode() }
         vb.ibSettings.setOnClickListener { callback?.showSettings() }
+
+        vb.flUrl.setOnClickListener { vb.etUrl.requestFocus() }
 
         if (Utils.isFireTV(context)) {
             vb.ibMenu.nextFocusRightId = R.id.ibHistory
@@ -132,12 +153,15 @@ class ActionBar @JvmOverloads constructor(
     private fun enterExtendedAddressBarMode() {
         if (extendedAddressBarMode) return
         extendedAddressBarMode = true
-        for (i in 0 until childCount) {
-            val child = getChildAt(i)
-            if (child is ImageButton) {
-                child.visibility = GONE
+
+        for (c in children) {
+            if (c is ImageButton)
+                c.visibility = GONE
+            else if(c is LinearLayout){
+                c.children.forEach { if(it is ImageButton) it.visibility = GONE }
             }
         }
+
         TransitionManager.beginDelayedTransition(this)
         callback?.onExtendedAddressBarMode()
     }
@@ -145,12 +169,20 @@ class ActionBar @JvmOverloads constructor(
     fun dismissExtendedAddressBarMode() {
         if (!extendedAddressBarMode) return
         extendedAddressBarMode = false
-        for (i in 0 until childCount) {
-            val child = getChildAt(i)
-            if (child is ImageButton) {
-                child.visibility = VISIBLE
+
+        for (c in children) {
+            if (c is ImageButton)
+                c.visibility = VISIBLE
+            else if(c is LinearLayout){
+                c.children.forEach { if(it is ImageButton) it.visibility = VISIBLE }
             }
         }
+
+        TransitionManager.beginDelayedTransition(this)
+    }
+
+    fun isExtendedAddressBarMode(): Boolean {
+        return extendedAddressBarMode
     }
 
     fun catchFocus() {

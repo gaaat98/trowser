@@ -5,10 +5,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.PorterDuff
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -16,18 +12,15 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.AttributeSet
-import android.view.*
-import android.view.animation.Animation
-import android.view.animation.AnimationUtils
-import android.view.animation.BounceInterpolator
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
-import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.content.ContextCompat
 import com.android.trowser.R
-import com.android.trowser.databinding.ViewSpeachRecognizerResultsBinding
+import com.android.trowser.databinding.ViewSpeechRecognizerResultsBinding
 
 
 class VoiceSearchHelper(private val activity: Activity, private val requestCode: Int, private val permissionRequestCode: Int) {
@@ -38,16 +31,18 @@ class VoiceSearchHelper(private val activity: Activity, private val requestCode:
 
     interface Callback {
         fun onResult(text: String?)
-/*        fun onFallbackStartedRecognizing()
+        /*
         fun onFallbackPartialResult(text: String)
-        fun onFallbackError(error: Int)*/
+        fun onFallbackStartedRecognizing()
+        fun onFallbackError(error: Int)
+         */
     }
 
     fun initiateVoiceSearch(callback: Callback,
                             languageModel: String = RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH) {
         this.callback = callback
         this.languageModel = languageModel
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             initiateVoiceSearchAndroid11AndNext()
         } else {
             val pm = activity.packageManager
@@ -58,11 +53,10 @@ class VoiceSearchHelper(private val activity: Activity, private val requestCode:
                 showInstallVoiceEnginePrompt(activity)
             } else {
                 val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                intent.putExtra(
-                    RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                    languageModel
-                )
-                intent.putExtra(RecognizerIntent.EXTRA_PROMPT, activity.getString(R.string.speak))
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, languageModel)
+                intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1000)
+                //intent.putExtra(RecognizerIntent.EXTRA_PROMPT, activity.getString(R.string.speak))
+                //intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1500);
                 try {
                     activity.startActivityForResult(intent, requestCode)
                 } catch (e: Exception) {
@@ -94,7 +88,7 @@ class VoiceSearchHelper(private val activity: Activity, private val requestCode:
         dialogBuilder.show()
     }
 
-    @RequiresApi(Build.VERSION_CODES.R)
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun initiateVoiceSearchAndroid11AndNext() {
         if (activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             activity.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), permissionRequestCode)
@@ -102,56 +96,25 @@ class VoiceSearchHelper(private val activity: Activity, private val requestCode:
         }
 
         val speechRecognizer = SpeechRecognizer.createSpeechRecognizer(activity)
-        speechRecognizer.setRecognitionListener(object : RecognitionListenerAdapter() {
-            override fun onReadyForSpeech(params: Bundle?) {
-                //callback.onFallbackStartedRecognizing()
-            }
+        recognitionResultsRendererView = RecognitionResultsRendererView(activity)
+        recognitionResultsRendererView?.setSpeechRecognizer(speechRecognizer)
+        recognitionResultsRendererView?.setRecognitionListener(callback, ::disposeResultsView)
 
-            override fun onPartialResults(partialResults: Bundle?) {
-                val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                if (matches != null && matches.isNotEmpty()) {
-                    recognitionResultsRendererView?.apply {
-                        resultText = matches.first()
-                    }
-                }
-            }
 
-            override fun onResults(results: Bundle?) {
-                disposeResultsView()
-                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                callback.onResult(matches?.firstOrNull())
-            }
 
-            override fun onError(error: Int) {
-                disposeResultsView()
-                Toast.makeText(activity, R.string.error, Toast.LENGTH_SHORT).show()
-            }
-
-            override fun onRmsChanged(rmsdB: Float) {
-                recognitionResultsRendererView?.onRmsChanged(rmsdB)
-            }
-        })
         val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        speechRecognizerIntent.putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-            languageModel
-        )
-        speechRecognizerIntent.putExtra(
-            RecognizerIntent.EXTRA_PARTIAL_RESULTS,
-            true
-        )
-        speechRecognizerIntent.putExtra(
-            RecognizerIntent.EXTRA_CALLING_PACKAGE,
-            activity.packageName
-        )
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, languageModel)
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, activity.packageName)
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000)
+
+        val lp = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        activity.addContentView(recognitionResultsRendererView, lp)
         speechRecognizer.startListening(speechRecognizerIntent)
 
-        recognitionResultsRendererView = RecognitionResultsRendererView(activity)
-        val lp = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT)
-        activity.addContentView(recognitionResultsRendererView, lp)
     }
 
+    // Moving this function inside RecognitionResultsRendererView does not work, why?
     private fun disposeResultsView() {
         (recognitionResultsRendererView?.parent as? ViewGroup)?.apply {
             removeView(recognitionResultsRendererView)
@@ -209,35 +172,68 @@ class VoiceSearchHelper(private val activity: Activity, private val requestCode:
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     class RecognitionResultsRendererView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     ) : FrameLayout(context, attrs, defStyleAttr) {
 
-        private var infiniteAnimation = AnimationUtils.loadAnimation(activity, R.anim.infinite_fadeinout_anim)
-        private var vb =
-            ViewSpeachRecognizerResultsBinding.inflate(LayoutInflater.from(activity), this)
+        private var vb = ViewSpeechRecognizerResultsBinding.inflate(LayoutInflater.from(activity), this)
+        private val recognitionProgressView = vb.ivMic
+
         var resultText: String = ""
         set(value) {
             field = value
             vb.tvResults.text = value
         }
-        var minRMSdB = 0f
-        var maxRMSdB = 0f
 
         init {
             setBackgroundResource(R.color.top_bar_background)
+            val h = (resources.getDimension(R.dimen.voice_recognition_results_renderer_height)/2).toInt() - 2
+            val heights = intArrayOf((0.83*h).toInt(), h, (0.75*h).toInt(), (0.95*h).toInt(), (0.66*h).toInt())
+            recognitionProgressView.setBarMaxHeightsInDp(heights)
+
+            val colors = intArrayOf(
+                ContextCompat.getColor(context, R.color.GBlue),
+                ContextCompat.getColor(context, R.color.GRed),
+                ContextCompat.getColor(context, R.color.GYellow),
+                ContextCompat.getColor(context, R.color.GBlue),
+                ContextCompat.getColor(context, R.color.GGreen)
+            )
+            recognitionProgressView.setColors(colors)
             elevation = Utils.D2P(context, 5f)
-            infiniteAnimation.interpolator = BounceInterpolator()
-            vb.ivMic.startAnimation(infiniteAnimation)
+            // unable to start animation from onReadyForSpeech or onBeginningOfSpeech
+            recognitionProgressView.setCircleRadiusInDp(3)
+            recognitionProgressView.setSpacingInDp(3)
+            recognitionProgressView.play()
         }
 
-        fun onRmsChanged(rmsdB: Float) {
-            vb.ivMic.clearAnimation()
-            if (rmsdB > maxRMSdB) maxRMSdB = rmsdB
-            if (rmsdB < minRMSdB) minRMSdB = rmsdB
-            val frac = (rmsdB - minRMSdB) / (maxRMSdB - minRMSdB)
-            vb.ivMic.setColorFilter(Color.argb(1f, 0f, 0.4f * frac, 0.8f * frac), PorterDuff.Mode.SRC_IN)
+        fun setSpeechRecognizer(speechRecognizer: SpeechRecognizer){
+            recognitionProgressView.setSpeechRecognizer(speechRecognizer)
+        }
+
+        fun setRecognitionListener(callback: Callback, dispose: () -> (Unit)){
+            recognitionProgressView.setRecognitionListener(object : RecognitionListenerAdapter() {
+                override fun onPartialResults(partialResults: Bundle?) {
+                    val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                    if (matches != null && matches.isNotEmpty()) {
+                            resultText = matches.first()
+                    }
+                }
+
+                override fun onEndOfSpeech() {
+                    recognitionProgressView.stop()
+                    dispose()
+                    super.onEndOfSpeech()
+                }
+
+                override fun onResults(results: Bundle?) {
+                    val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                    callback.onResult(matches?.firstOrNull())
+                }
+
+                override fun onError(error: Int) {
+                    Toast.makeText(activity, R.string.error, Toast.LENGTH_SHORT).show()
+                }
+            })
         }
     }
 }
